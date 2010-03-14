@@ -1,5 +1,6 @@
 import Graphics.Rendering.OpenGL
 import Data.Array.IArray
+import Data.Array
 
 -- x::Vector3 -> Double
 x (Vector3 x y z) = x
@@ -42,11 +43,13 @@ makeParticles m0 n0 = [MkParticle { pos = Vector3  x 0.0 z, v =  Vector3 0.0 0.0
 particles = makeParticles m0 n0
 
 -- makeArray::(IArray Int Particle, Ix i, Num i) => i -> i -> [Particle] -> 
-makeArray :: (Num a, IArray a1 e, Particle e, Ix a) => a -> a -> [e] -> a1 a e
-makeArray m n l = listArray (0,(m+1)*n) l
+makeArray m n l = Data.Array.listArray (0,(m+1)*n) l
 
 -- parArray0 = listArray (1,(m+1)*n) particles
 parArray0 = makeArray m n particles
+
+Data.Array.IArray.amap (x . pos) parArray0
+
 -- integrate::Float -> Array Integer Particle -> Array Integer Particle
 -- integrate dt particles = map v 
 
