@@ -1,0 +1,7 @@
+git add skel.hs Vector.hs
+git commit skel.hs Vector.hs
+git push git@github.com:manjunaths/Mass-Spring-Simulator.git
+
+s
+
+git pull http://manjunaths@github.com/manjunaths/Mass-Spring-Simulator
