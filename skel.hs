@@ -25,11 +25,11 @@ initAll = do
 idle :: State -> IdleCallback
 idle state = do
   -- changeAngle state
-  let rotatef = rotate :: GLfloat -> Vector3 GLfloat -> IO ()
-  s <- get (active state)
-  if s == True
-    then  rotatef (0.05) (Vector3 1 0 1)
-    else rotatef (0.0) (Vector3 1 0 1)
+   
+  -- s <- get (active state)
+  -- if s == True
+  --   then  rotatef (0.05) (Vector3 1 0 1)
+  --   else rotatef (0.0) (Vector3 1 0 1)
     
   postRedisplay Nothing
 
@@ -76,21 +76,58 @@ motion state (Position x y) = do
             dy state $= y - y0acc
             x0 state $= x
             y0 state $= y
+            dx0 <- get (dx state)
+            dy0 <- get (dy state)
+            
             (_, Size width height) <- get viewport
-            update (fromIntegral width) (fromIntegral height)
-    else undefined
-  where update w h = 
-          let small = (min w h) / 2.0
-              offset = MkVec3 (w/2.0) (h/2.0) 0
-              a = MkVec3 (x-dx) (h - (y+dy)) 0
-              b = MkVec3  x (h - y) 0
-              a0 = a .-. offset
-              b0 = b .-. offset
-              a1 = a0 ./. min
-              b1 = a0 ./. min
+            let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral dx0) (fromIntegral dy0) (fromIntegral x0acc) (fromIntegral y0acc)
+            -- translatef (Vector3 0.0 0.0 0.0)
+            rotatef (last incr) (Vector3 (head incr) (incr !! 1) (incr !! 2))
+            --translatef (Vector3 (0.0 :: GLfloat) ( 0.0 :: GLfloat ) (0.0 :: GLfloat))
+            
+    else do dx state $= 0
+            dy state $= 0
+            x0acc <- get (x0 state)
+            y0acc <- get (y0 state)
+            x0 state $= x
+            y0 state $= y
+            active state $= not act
+            (_, Size width height) <- get viewport
+            let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral 0) (fromIntegral 0) (fromIntegral x0acc) (fromIntegral y0acc)
+            --translatef (Vector3 (0.0 :: GLfloat) (0.0 :: GLfloat) (0.0 :: GLfloat))
+            rotatef (last incr) (Vector3 (head incr) (incr !! 1) (incr !! 2))
+            --translatef (Vector3 (0.0 :: GLfloat) (0.0 :: GLfloat) (-0.0 :: GLfloat))
+            
+update::GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> [GLfloat]
+update w h dx dy x y = incr 
+  where
+    small = (min w h) / 2.0
+    offset = MkVec3 (w/2.0) (h/2.0) 0
+    a = MkVec3 (x-dx) (h - (y+dy)) 0
+    b = MkVec3  x (h - y) 0
+    a0 = (a .-. offset) ./. small
+    b0 = (b .-. offset) ./. small
+    tmpscale = 1.0     
+    a1 = MkVec3 (getx a0) (2.0 ** ((-0.5) * (vabs a0))) (getz a0)
+    b1 = MkVec3 (getx b0) (2.0 ** ((-0.5) * (vabs b0))) (getz b0)
+    a2 = a1 ./. (vabs a1)
+    b2 = b1 ./. (vabs b1)
+    axis = (cross a2 b2) ./. (vabs (cross a2 b2))
+    angle = acos (dot a2 b2)
+    incr = make_quat (getx axis) (gety axis) (getz axis) angle
 
-          in
-           small * getx offset
+make_quat :: GLfloat -> GLfloat -> GLfloat -> GLfloat -> [GLfloat] 
+make_quat x y z angle = if sq_norm <= 10e-6
+                           then [0.0, 0.0, 0.0, 1.0]
+                        else [sin_theta * x, sin_theta * y, sin_theta * z, cos theta]
+                                    
+  where sq_norm = x*x + y*y + z*z
+        theta = angle * 0.5
+        sin_theta = sin theta
+        
+translatef = translate  :: Vector3 GLfloat -> IO ()    
+rotatef = rotate :: GLfloat -> Vector3 GLfloat -> IO ()
+
 
 main :: IO ()
 main = do
