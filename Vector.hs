@@ -13,6 +13,7 @@ module Vector
          cross
          ) where
          
+-- Add in glut libraries
 import Graphics.UI.GLUT
 
 data Vec3 v = MkVec3 GLfloat GLfloat GLfloat deriving Show

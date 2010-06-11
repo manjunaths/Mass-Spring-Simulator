@@ -1,11 +1,18 @@
+To commit changes
+-----------------
 git add skel.hs Vector.hs
 git commit skel.hs Vector.hs
 git push git@github.com:manjunaths/Mass-Spring-Simulator.git
 
-s
-
+To update local copy from remote
+--------------------------------
 git pull http://manjunaths@github.com/manjunaths/Mass-Spring-Simulator
 
 To checkout the remote repository
 ---------------------------------
+Copy the ~/.ssh/config file into ~/.ssh and also the private and public keys.
 git clone git://github.com/manjunaths/Mass-Spring-Simulator
+
+Building skel.hs
+----------------
+ghc --make skel.hs -lglut

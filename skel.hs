@@ -41,8 +41,7 @@ reshape size = do
   frustum (-1) 1 (-1) 1 5 25
   matrixMode $= Modelview 0
   loadIdentity
-  
-  let translatef = translate  :: Vector3 GLfloat -> IO ()    
+  -- let translatef = translate  :: Vector3 GLfloat -> IO ()    
   translatef (Vector3 0 0 (-15))
   
 display :: State -> DisplayCallback
@@ -81,9 +80,11 @@ motion state (Position x y) = do
             
             (_, Size width height) <- get viewport
             let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral dx0) (fromIntegral dy0) (fromIntegral x0acc) (fromIntegral y0acc)
-            -- translatef (Vector3 0.0 0.0 0.0)
-            rotatef (last incr) (Vector3 (head incr) (incr !! 1) (incr !! 2))
-            --translatef (Vector3 (0.0 :: GLfloat) ( 0.0 :: GLfloat ) (0.0 :: GLfloat))
+                -- to_degrees angle = angle * 57.2957795130823208767981548141052
+            rotatef (acos (last incr) * 2.0) (Vector3 (head incr) (incr !! 1) (incr !! 2))
+            
+            --translatef (Vector3 0 0 (-15))
+            -- translatef (Vector3 (0.0 :: GLfloat) ( 0.0 :: GLfloat ) (0.0 :: GLfloat))
             
     else do dx state $= 0
             dy state $= 0
@@ -95,8 +96,9 @@ motion state (Position x y) = do
             (_, Size width height) <- get viewport
             let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral 0) (fromIntegral 0) (fromIntegral x0acc) (fromIntegral y0acc)
             --translatef (Vector3 (0.0 :: GLfloat) (0.0 :: GLfloat) (0.0 :: GLfloat))
-            rotatef (last incr) (Vector3 (head incr) (incr !! 1) (incr !! 2))
+            -- rotatef (last incr) (Vector3 (head incr) (incr !! 1) (incr !! 2))
             --translatef (Vector3 (0.0 :: GLfloat) (0.0 :: GLfloat) (-0.0 :: GLfloat))
+            print "What"
             
 update::GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> [GLfloat]
 update w h dx dy x y = incr 
@@ -108,23 +110,46 @@ update w h dx dy x y = incr
     a0 = (a .-. offset) ./. small
     b0 = (b .-. offset) ./. small
     tmpscale = 1.0     
-    a1 = MkVec3 (getx a0) (2.0 ** ((-0.5) * (vabs a0))) (getz a0)
-    b1 = MkVec3 (getx b0) (2.0 ** ((-0.5) * (vabs b0))) (getz b0)
+    a1 = MkVec3 (getx a0) (gety a0) (2.0 ** ((-0.5) * (vabs a0)))
+    b1 = MkVec3 (getx b0) (gety b0) (2.0 ** ((-0.5) * (vabs b0)))
     a2 = a1 ./. (vabs a1)
     b2 = b1 ./. (vabs b1)
-    axis = (cross a2 b2) ./. (vabs (cross a2 b2))
+    a_cross_b = cross a2 b2
+    axis = a_cross_b ./. (vabs a_cross_b)
     angle = acos (dot a2 b2)
-    incr = make_quat (getx axis) (gety axis) (getz axis) angle
+    tmp_incr = make_quat (getx axis) (gety axis) (getz axis) angle
+    incr = if dx == 0.0 && dy == 0.0 
+           then [0.0, 1.0, 0.0, 0.0]
+           -- else if (last tmp_incr) /= 0.0 
+           --         then multiply_quat ([0.0, 1.0, 0.0, 0.0]) tmp_incr 
+           else tmp_incr
+                
 
 make_quat :: GLfloat -> GLfloat -> GLfloat -> GLfloat -> [GLfloat] 
 make_quat x y z angle = if sq_norm <= 10e-6
-                           then [0.0, 0.0, 0.0, 1.0]
+                        then [0.0, 0.0, 0.0, 1.0]
                         else [sin_theta * x, sin_theta * y, sin_theta * z, cos theta]
-                                    
-  where sq_norm = x*x + y*y + z*z
-        theta = angle * 0.5
-        sin_theta = sin theta
-        
+                          where sq_norm = x*x + y*y + z*z
+                                theta = angle * 0.5
+                                sin_theta = sin theta
+                                
+multiply_quat :: [GLfloat] -> [GLfloat] -> [GLfloat]
+multiply_quat qr ql = qo
+  where
+    qr_x = head qr
+    qr_y = qr !! 1
+    qr_z = qr !! 2
+    qr_w = last qr
+    ql_x = head ql
+    ql_y = ql !! 1
+    ql_z = ql !! 2
+    ql_w = last ql
+    w = ql_w * qr_w - ql_x * qr_x - ql_y * qr_y - ql_z * qr_z
+    x = ql_w * qr_x + ql_x * qr_w + ql_y * qr_z - ql_z * qr_y
+    y = ql_w * qr_y + ql_y * qr_w + ql_z * qr_x - ql_x * qr_z
+    z = ql_w * qr_z + ql_z * qr_w + ql_x * qr_y - ql_y * qr_x
+    qo = [x, y, z, w]
+
 translatef = translate  :: Vector3 GLfloat -> IO ()    
 rotatef = rotate :: GLfloat -> Vector3 GLfloat -> IO ()
 
