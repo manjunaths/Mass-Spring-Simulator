@@ -5,3 +5,7 @@ git push git@github.com:manjunaths/Mass-Spring-Simulator.git
 s
 
 git pull http://manjunaths@github.com/manjunaths/Mass-Spring-Simulator
+
+To checkout the remote repository
+---------------------------------
+git clone git://github.com/manjunaths/Mass-Spring-Simulator
