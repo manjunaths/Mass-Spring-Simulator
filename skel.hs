@@ -3,6 +3,7 @@ import Graphics.UI.GLUT
 import Data.IORef ( IORef, newIORef )
 import Foreign ( newArray )
 import Vector
+import Quaternion
 
 data State = State { angle :: IORef GLfloat, active :: IORef Bool, x0 :: IORef GLint, y0 :: IORef GLint, dx :: IORef GLint, dy :: IORef GLint}
 
@@ -65,6 +66,8 @@ keyboard state (MouseButton b) Down _ (Position x y) = do
 -- keyboard state (MouseButton LeftButton) Up _ (Position x y) = do
 keyboard _ _           _    _ _ = return ()
 
+to_degrees angle = angle * 57.2957795130823208767981548141052
+
 motion :: State -> MotionCallback
 motion state (Position x y) = do
   act <- get (active state)
@@ -80,9 +83,10 @@ motion state (Position x y) = do
             
             (_, Size width height) <- get viewport
             let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral dx0) (fromIntegral dy0) (fromIntegral x0acc) (fromIntegral y0acc)
-                -- to_degrees angle = angle * 57.2957795130823208767981548141052
-            rotatef (acos (last incr) * 2.0) (Vector3 (head incr) (incr !! 1) (incr !! 2))
-            
+                -- 
+                incr_vec = getV incr
+            rotatef ((acos (getW incr) * 1.0)) (Vector3 (getX incr_vec) (getY incr_vec) (getZ incr_vec))
+
             --translatef (Vector3 0 0 (-15))
             -- translatef (Vector3 (0.0 :: GLfloat) ( 0.0 :: GLfloat ) (0.0 :: GLfloat))
             
@@ -98,9 +102,9 @@ motion state (Position x y) = do
             --translatef (Vector3 (0.0 :: GLfloat) (0.0 :: GLfloat) (0.0 :: GLfloat))
             -- rotatef (last incr) (Vector3 (head incr) (incr !! 1) (incr !! 2))
             --translatef (Vector3 (0.0 :: GLfloat) (0.0 :: GLfloat) (-0.0 :: GLfloat))
-            print "What"
+            translatef (Vector3 0 0 0)
             
-update::GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> [GLfloat]
+update::GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> Quaternion
 update w h dx dy x y = incr 
   where
     small = (min w h) / 2.0
@@ -117,11 +121,10 @@ update w h dx dy x y = incr
     a_cross_b = cross a2 b2
     axis = a_cross_b ./. (vabs a_cross_b)
     angle = acos (dot a2 b2)
-    tmp_incr = make_quat (getx axis) (gety axis) (getz axis) angle
+    -- tmp_incr = make_quat (getx axis) (gety axis) (getz axis) angle
+    tmp_incr = MkQuat axis angle 
     incr = if dx == 0.0 && dy == 0.0 
-           then [0.0, 1.0, 0.0, 0.0]
-           -- else if (last tmp_incr) /= 0.0 
-           --         then multiply_quat ([0.0, 1.0, 0.0, 0.0]) tmp_incr 
+           then MkQuat (MkVec3 0.0  1.0  0.0) 0.0
            else tmp_incr
                 
 

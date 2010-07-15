@@ -1,8 +1,13 @@
 
-CC=ghc
+GHC=ghc
 CFLAGS=-lglut
+CC=gcc
+
+quatrot: QuatRot.c
+	$(CC) -o QuatRot.linux QuatRot.c -lglut -lGLU -lGL -lm
+
 
 skel: skel.hs Vector.hs
-	$(CC) --make skel.hs $(CFLAGS)
+	$(GHC) --make skel.hs $(CFLAGS)
 clean:
-	rm -f skel.exe skel.o skel.hi Vector.o Vector.hi
+	rm -f skel skel.o skel.hi Vector.o Vector.hi
