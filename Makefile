@@ -8,6 +8,7 @@ quatrot: QuatRot.c
 
 
 skel: skel.hs Vector.hs
-	$(GHC) --make skel.hs $(CFLAGS)
+	$(GHC) --make skel.hs  $(CFLAGS)
+
 clean:
 	rm -f skel *.o *.hi
