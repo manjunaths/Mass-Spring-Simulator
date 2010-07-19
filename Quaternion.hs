@@ -1,6 +1,10 @@
-module Quaterion
+module Quaternion
        (
-       Quaternion(..)
+       Quaternion(..),
+       conjugate,
+       quatMul,
+       quatPointMul,
+       quatRot
        ) where
 
 import Graphics.UI.GLUT
@@ -11,7 +15,18 @@ data Quaternion = MkQuat {getV :: Vec3, getW :: GLfloat} deriving Show
 conjugate::Quaternion -> Quaternion
 conjugate q = MkQuat ((getV q) .*. (-1.0)) (getW q)
 
+quatScalarMul::Quaternion -> GLfloat -> Quaternion
+quatScalarMul q0 s = MkQuat ((getV q0) .*. s) (s * getW q0)
 
+quatAdd::Quaternion -> Quaternion -> Quaternion
+quatAdd q0 q1 = MkQuat (getV q0 .+. getV q1) (getW q0 + getW q1)
+  
+nlerp::Quaternion -> Quaternion -> GLfloat -> Quaternion
+nlerp q0 q1 a2 = let w1 = 1.0 - a2
+                     qt0 = quatScalarMul q0 w1
+                     qt1 = quatScalarMul q1 a2
+                 in
+                    quatAdd qt0 qt1
 quatMul::Quaternion -> Quaternion -> Quaternion
 quatMul q1 q2 = let v1 = getV q1
                     v2 = getV q2
