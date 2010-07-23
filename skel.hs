@@ -77,8 +77,9 @@ motion state (Position x y) = do
             y0acc <- get (y0 state)
             dx0 <- get (dx state)
             dy0 <- get (dy state)
+            r0 <- get (r state)
             (_, Size width height) <- get viewport
-            let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral (x - x0acc)) (fromIntegral (y0acc - y)) (fromIntegral x) (fromIntegral y)
+            let incr = update r (fromIntegral width) (fromIntegral height) (fromIntegral (x - x0acc)) (fromIntegral (y0acc - y)) (fromIntegral x) (fromIntegral y)
                 -- 
                 incr_vec = (getV incr)
             
@@ -94,15 +95,16 @@ motion state (Position x y) = do
             dy state $= 0
             x0acc <- get (x0 state)
             y0acc <- get (y0 state)
+            r0 <- get (r state)
             x0 state $= x
             y0 state $= y
             active state $= not act
             (_, Size width height) <- get viewport
-            let incr = update (fromIntegral width) (fromIntegral height) (fromIntegral 0) (fromIntegral 0) (fromIntegral x) (fromIntegral y)
+            let incr = update r0 (fromIntegral width) (fromIntegral height) (fromIntegral 0) (fromIntegral 0) (fromIntegral x) (fromIntegral y)
             rotatef 0 (Vector3 0 1 0)
             
-update::GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> Quaternion
-update w h dx dy x y = incr 
+update::Quaternion -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> Quaternion
+update r w h dx dy x y = incr 
   where
     small = (min w h) / 2.0
     offset = MkVec3 (w/2.0) (h/2.0) 0
@@ -125,7 +127,7 @@ update w h dx dy x y = incr
     tmp_incr = MkQuat axis angle
     incr = if dx == 0 && dy == 0
            then MkQuat (MkVec3 0.0  1.0  0.0) 0.0
-           else trace ("tmp_incr = " ++ show tmp_incr) tmp_incr
+           else quat_mul r (trace ("tmp_incr = " ++ show tmp_incr) tmp_incr) 
                 
 
 make_quat :: Vec3 -> GLfloat -> Quaternion

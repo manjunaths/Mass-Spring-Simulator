@@ -4,7 +4,8 @@ module Quaternion
        conjugate,
        quatMul,
        quatPointMul,
-       quatRot
+       quatRot,
+       quat_mul
        ) where
 
 import Graphics.UI.GLUT
@@ -57,7 +58,24 @@ quatPointMul q1 q2 = let v1 = getV q1
                          v = MkVec3 (a1*b2 + b1*a2 + c1*d2 - (d1*c2)) (a1*c2 - (b1*d2) + c1*a2 + d1*b2)  (a1*d2 + b1*c2 - (c1*b2) + d1*a2)
                      in
                       v
-
+quat_mul::Quaternion -> Quaternion -> Quaternion
+quat_mul ql qr = let v1 = getV ql
+                     v2 = getV qr
+                     qlx = getX v1
+                     qly = getY v1
+                     qlz = getZ v1
+                     qlw = getW ql
+                     qrx = getX v2
+                     qry = getY v2
+                     qrz = getZ v2
+                     qrw = getW qr
+                     w = qlw * qrw - qlx * qrx - qly * qry - qlz * qrz
+                     x = qlw * qrx + qlx * qrw + qly * qrz - qlz * qry
+                     y = qlw * qry + qly * qrw + qlz * qrx - qlx * qrz
+                     z = qlw * qrz + qlz * qrw + qlx * qry - qly * qrx
+                     v = MkQuat (MkVec3 x y z) w
+                     in v
+                     
 
 -- --quaternion multiplication
 -- function quat_mult(Quaternion q1, Quaternion q2)
